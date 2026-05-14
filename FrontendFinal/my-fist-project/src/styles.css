@@ -1,0 +1,104 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: #f1f5f9;
+}
+
+* { box-sizing: border-box; }
+
+/* ── Page shell ─────────────────────────────── */
+.page-shell {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left,  rgba(16,185,129,0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(99,102,241,0.08), transparent 30%),
+    #f1f5f9;
+}
+
+.page-content {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+
+/* ── Toolbar ────────────────────────────────── */
+.top-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(90deg, #1f315d 0%, #2d4a8a 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 20px rgba(31,49,93,0.25) !important;
+  height: 64px !important;
+}
+
+.toolbar-spacer { flex: 1 1 auto; }
+
+/* ── Titles ─────────────────────────────────── */
+.hero-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Cards ──────────────────────────────────── */
+.section-card {
+  border-radius: 20px !important;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.07) !important;
+}
+
+/* ── Layout grid ────────────────────────────── */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .two-column-layout { grid-template-columns: 1fr; }
+}
+
+/* ── Form fields ────────────────────────────── */
+.mat-mdc-form-field { width: 100%; }
+
+/* ── Mat overrides ──────────────────────────── */
+.mat-mdc-card-title {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.mat-mdc-card-subtitle {
+  color: #64748b !important;
+  font-size: 0.82rem !important;
+}
+
+/* Select panel */
+div.mat-mdc-select-panel {
+  border-radius: 14px !important;
+  padding: 6px !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.15) !important;
+}
+
+.mat-mdc-option {
+  border-radius: 10px !important;
+  min-height: 42px !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected {
+  background: rgba(99,102,241,0.10) !important;
+}
+
+/* Snack bar */
+.mat-mdc-snack-bar-container {
+  border-radius: 12px !important;
+}

@@ -1,0 +1,170 @@
+<!-- Header -->
+<div class="page-header">
+  <div class="page-header-icon">
+    <mat-icon>assignment</mat-icon>
+  </div>
+  <div class="page-header-text">
+    <h1 class="hero-title">Tareas</h1>
+    <p class="hero-subtitle">Gestiona y filtra las tareas de tus proyectos</p>
+  </div>
+  <button mat-raised-button color="primary" class="new-task-btn"
+    (click)="mostrarFormulario = !mostrarFormulario">
+    <mat-icon>{{ mostrarFormulario ? 'close' : 'add' }}</mat-icon>
+    {{ mostrarFormulario ? 'Cancelar' : 'Nueva Tarea' }}
+  </button>
+</div>
+
+<!-- Formulario (expandible) -->
+@if (mostrarFormulario) {
+  <mat-card class="section-card form-card">
+    <mat-card-header>
+      <mat-card-title>Registrar nueva tarea</mat-card-title>
+      <mat-card-subtitle>Asigna la tarea a un proyecto y define su estado inicial</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Título de la tarea</mat-label>
+            <input matInput formControlName="titulo"
+              placeholder="Ej: Implementar pantalla de login" />
+            <mat-icon matSuffix>title</mat-icon>
+            @if (form.get('titulo')?.hasError('required') && form.get('titulo')?.touched) {
+              <mat-error>El título es obligatorio</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Descripción</mat-label>
+            <textarea matInput formControlName="descripcion" rows="2"
+              placeholder="Detalle adicional sobre la tarea (opcional)"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estado inicial</mat-label>
+            <mat-select formControlName="estado">
+              @for (e of estados; track e) {
+                <mat-option [value]="e">
+                  <mat-icon class="opt-icon">{{ iconoEstado(e) }}</mat-icon> {{ e }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Proyecto</mat-label>
+            <mat-select formControlName="proyecto_id">
+              @for (p of proyectos; track p.id) {
+                <mat-option [value]="p.id">{{ p.nombre }}</mat-option>
+              }
+            </mat-select>
+            @if (form.get('proyecto_id')?.hasError('required') && form.get('proyecto_id')?.touched) {
+              <mat-error>Selecciona un proyecto</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="mostrarFormulario = false">
+            Cancelar
+          </button>
+          <button mat-raised-button color="primary" type="submit"
+            [disabled]="form.invalid || cargando">
+            @if (cargando) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              <ng-container><mat-icon>save</mat-icon> Guardar Tarea</ng-container>
+            }
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+}
+
+<!-- Filtros -->
+<div class="filter-bar">
+  <span class="filter-label">Filtrar:</span>
+  @for (f of filtros; track f) {
+    <button mat-stroked-button
+      [ngClass]="{ 'filter-active': filtroActual === f, 'chip-pendiente': f === 'pendiente' && filtroActual === f, 'chip-en-progreso': f === 'en progreso' && filtroActual === f, 'chip-completada': f === 'completada' && filtroActual === f }"
+      (click)="aplicarFiltro(f)">
+      @if (f !== 'todas') {
+        <mat-icon class="filter-icon">{{ iconoEstado(f) }}</mat-icon>
+      }
+      {{ f | titlecase }}
+      <span class="count-badge">{{ countPor(f) }}</span>
+    </button>
+  }
+</div>
+
+<!-- Tablero de tareas -->
+@if (cargandoLista) {
+  <div class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+} @else if (tareasFiltradas().length === 0) {
+  <div class="empty-state">
+    <mat-icon class="empty-icon">assignment_late</mat-icon>
+    <p>No hay tareas
+      @if (filtroActual !== 'todas') { con estado "{{ filtroActual }}" }
+    </p>
+    <button mat-stroked-button color="primary" (click)="mostrarFormulario = true">
+      <mat-icon>add</mat-icon> Crear primera tarea
+    </button>
+  </div>
+} @else {
+  <div class="tasks-grid">
+    @for (tarea of tareasFiltradas(); track tarea.id) {
+      <mat-card class="task-card" [ngClass]="'border-' + claseEstado(tarea.estado)">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="task-icon" [ngClass]="claseEstado(tarea.estado)">
+            {{ iconoEstado(tarea.estado) }}
+          </mat-icon>
+          <mat-card-title class="task-title">{{ tarea.titulo }}</mat-card-title>
+          <mat-card-subtitle>
+            <mat-icon class="proj-icon">folder</mat-icon>
+            {{ nombreProyecto(tarea) }}
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          @if (tarea.descripcion) {
+            <p class="task-desc">{{ tarea.descripcion }}</p>
+          }
+          <span class="estado-pill" [ngClass]="claseEstado(tarea.estado)">
+            <mat-icon>{{ iconoEstado(tarea.estado) }}</mat-icon>
+            {{ tarea.estado }}
+          </span>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          @if (tarea.estado !== 'completada') {
+            <button mat-stroked-button color="primary"
+              class="advance-btn"
+              [matTooltip]="'Pasar a: ' + siguienteEstado(tarea.estado)"
+              (click)="avanzarEstado(tarea)">
+              <mat-icon>arrow_forward</mat-icon>
+              {{ siguienteEstado(tarea.estado) }}
+            </button>
+          }
+
+          <button mat-icon-button [matMenuTriggerFor]="menuEstado"
+            matTooltip="Cambiar estado">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #menuEstado="matMenu">
+            @for (e of estados; track e) {
+              <button mat-menu-item (click)="cambiarEstado(tarea, e)"
+                [disabled]="tarea.estado === e">
+                <mat-icon>{{ iconoEstado(e) }}</mat-icon>
+                <span>{{ e }}</span>
+              </button>
+            }
+          </mat-menu>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}
